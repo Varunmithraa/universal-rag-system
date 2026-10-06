@@ -1,0 +1,19 @@
+FUNDAMENTALS OF QUANTUM COMPUTING AND ALGORITHMIC SPEEDUP
+Reference Manual - Version 4.2 (Published January 2026)
+
+Section 1: The Quantum State and Qubits
+Unlike classical bits which exist strictly in discrete states 0 or 1, quantum bits (qubits) can exist in a linear superposition of orthogonal basis states |0> and |1>. The state vector is expressed as:
+|psi> = alpha|0> + beta|1>, where |alpha|^2 + |beta|^2 = 1.
+This property allows an n-qubit register to simultaneously represent 2^n complex amplitudes, enabling exponential state parallelism across computational paths.
+
+Section 2: Quantum Entanglement and Bell States
+Entanglement is a non-local quantum phenomenon where the composite quantum state of two or more particles cannot be factored into product states of individual subsystems. Maximally entangled Bell states, such as |Phi+> = (|00> + |11>) / sqrt(2), are fundamental building blocks for quantum teleportation, superdense coding, and distributed quantum key distribution (QKD) protocols.
+
+Section 3: Quantum Algorithms and Complexity Classes
+Key algorithms that demonstrate quantum advantage over classical Turing machines include:
+1. Shor's Algorithm: Provides exponential speedup for integer factorization in polynomial time O((log N)^3), threatening standard RSA and elliptic curve cryptography.
+2. Grover's Algorithm: Provides quadratic speedup for unstructured database search in O(sqrt(N)) evaluations compared to classical O(N).
+3. Quantum Approximate Optimization Algorithm (QAOA): A hybrid variational quantum-classical algorithm designed for combinatorial optimization problems on NISQ (Noisy Intermediate-Scale Quantum) hardware.
+
+Section 4: Decoherence and Quantum Error Correction
+Physical qubits are susceptible to environmental noise and phase drift. Quantum Error Correction (QEC) schemes, specifically the Surface Code architecture with a code distance d, protect logical qubits by distributing quantum information across an array of data qubits and syndrome ancilla qubits. Fault-tolerant quantum computing requires physical error thresholds below 0.1% per gate operation.

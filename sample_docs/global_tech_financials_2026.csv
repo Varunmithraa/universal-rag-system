@@ -1,0 +1,16 @@
+Quarter,Department,Revenue_Millions_USD,Operating_Expense_Millions_USD,Net_Profit_Millions_USD,YoY_Growth_Pct,Active_Enterprise_Clients
+2025-Q1,Cloud Services,1420.5,890.2,530.3,28.4%,3400
+2025-Q2,Cloud Services,1560.8,920.4,640.4,31.2%,3650
+2025-Q3,Cloud Services,1710.2,990.1,720.1,34.0%,3920
+2025-Q4,Cloud Services,1950.4,1040.0,910.4,37.8%,4300
+2025-Q1,AI Platforms,450.0,380.0,70.0,115.0%,850
+2025-Q2,AI Platforms,620.5,410.2,210.3,142.5%,1200
+2025-Q3,AI Platforms,890.0,490.5,399.5,188.0%,1750
+2025-Q4,AI Platforms,1240.2,580.0,660.2,240.0%,2500
+2025-Q1,Cybersecurity,310.4,220.1,90.3,18.5%,1420
+2025-Q2,Cybersecurity,335.2,230.5,104.7,19.2%,1500
+2025-Q3,Cybersecurity,360.0,240.0,120.0,21.0%,1610
+2025-Q4,Cybersecurity,395.6,255.0,140.6,23.5%,1780
+2026-Q1,Cloud Services,2180.0,1120.0,1060.0,42.1%,4750
+2026-Q1,AI Platforms,1680.0,720.0,960.0,273.3%,3400
+2026-Q1,Cybersecurity,440.0,270.0,170.0,25.8%,1950

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Universal Multi-Format RAG AI Engine. Upload PDF, DOCX, PPTX, Excel, CSV, or Text and chat with high-precision grounded answers.">
+  <title>OmniRAG • Universal Document Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow layers -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- App Wrapper -->
+  <div class="app-layout">
+    
+    <!-- Top Navigation Header -->
+    <header class="top-header">
+      <div class="brand">
+        <div class="logo-orb">
+          <div class="orb-core"></div>
+        </div>
+        <div>
+          <h1 class="brand-title">OmniRAG <span class="badge-pill">AI Engine</span></h1>
+          <p class="brand-sub">Universal Document Intelligence & Grounded Generation</p>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Bar -->
+      <div class="header-metrics">
+        <div class="metric-chip" id="metric-docs">
+          <span class="dot"></span>
+          <span class="label">Docs:</span>
+          <span class="value" id="stat-docs-count">0</span>
+        </div>
+        <div class="metric-chip" id="metric-chunks">
+          <span class="label">Chunks:</span>
+          <span class="value" id="stat-chunks-count">0</span>
+        </div>
+        <div class="metric-chip model-chip" id="metric-model">
+          <span class="label">LLM:</span>
+          <span class="value" id="stat-model-name">gemini-2.5-flash</span>
+        </div>
+      </div>
+
+      <!-- Top Action Controls -->
+      <div class="header-actions">
+        <button id="btn-load-samples" class="btn btn-secondary" title="Load sample documents for instant testing">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Load Samples
+        </button>
+        <button id="btn-open-settings" class="btn btn-primary" title="Configure API Key and settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tab Buttons -->
+    <nav class="main-tabs" role="tablist">
+      <button class="tab-btn active" id="tab-btn-chat" data-tab="chat-view">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span>Ask & Chat</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-docs" data-tab="docs-view">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        <span>Document Hub</span>
+        <span class="tab-counter" id="docs-tab-count">0</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-arch" data-tab="arch-view">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        <span>Architecture & Workflow</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Views -->
+    <main class="content-container">
+
+      <!-- VIEW 1: CHAT & QUERY -->
+      <section class="tab-view active" id="chat-view">
+        <div class="chat-wrapper">
+          
+          <!-- Chat Control Bar -->
+          <div class="chat-control-bar">
+            <div class="filter-group">
+              <label for="doc-filter-select">Context Scope:</label>
+              <select id="doc-filter-select" class="custom-select">
+                <option value="">All Uploaded Documents</option>
+              </select>
+            </div>
+            <div class="chips-group" id="quick-prompts">
+              <span class="chip-label">Try asking:</span>
+              <button class="prompt-chip" data-prompt="What are the quantitative benchmarks and hallucination reduction rates in the multi-agent whitepaper?">Benchmarks?</button>
+              <button class="prompt-chip" data-prompt="What was the AI Platforms department revenue and YoY growth in 2025 and 2026?">AI Revenue?</button>
+              <button class="prompt-chip" data-prompt="Compare Shor's algorithm and Grover's algorithm speedup according to the quantum manual.">Quantum Speedups?</button>
+            </div>
+          </div>
+
+          <!-- Chat Messages Area -->
+          <div class="chat-messages" id="chat-messages">
+            <!-- Initial Bot Welcome Message -->
+            <div class="message-bubble bot-message" id="welcome-msg">
+              <div class="msg-avatar">AI</div>
+              <div class="msg-content">
+                <div class="msg-header">
+                  <span class="sender-title">OmniRAG Assistant</span>
+                  <span class="meta-tag">Grounded RAG</span>
+                </div>
+                <div class="msg-body">
+                  <p>Welcome! I am your <strong>OmniRAG Intelligent Document Assistant</strong>.</p>
+                  <p>I can digest and synthesize knowledge from virtually <strong>any document type</strong>:</p>
+                  <div class="format-tags">
+                    <span class="ftag">📄 PDF</span>
+                    <span class="ftag">📝 DOCX / DOC</span>
+                    <span class="ftag">📊 PPTX Slides</span>
+                    <span class="ftag">📈 Excel & CSV</span>
+                    <span class="ftag">💻 Code & JSON</span>
+                    <span class="ftag">📑 TXT & Markdown</span>
+                  </div>
+                  <p>To begin, click <strong>"Load Samples"</strong> in the top bar to test immediately, or go to <strong>Document Hub</strong> to drag & drop your own files!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input Area -->
+          <div class="chat-input-container">
+            <form id="chat-form" class="chat-input-form">
+              <textarea 
+                id="query-input" 
+                rows="1" 
+                placeholder="Ask any question about your documents... (Press Enter to send, Shift+Enter for new line)"
+                required
+              ></textarea>
+              <button type="submit" id="btn-send-query" class="btn btn-send" title="Send Question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              </button>
+            </form>
+            <div class="input-footer-hint">
+              <span>Answers are grounded in document chunks with interactive source citations.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: DOCUMENT HUB -->
+      <section class="tab-view" id="docs-view">
+        <div class="docs-hub-layout">
+          
+          <!-- Upload Area Card -->
+          <div class="glass-card upload-card">
+            <div class="card-header">
+              <h2>Universal Document Ingestion</h2>
+              <p>Upload any file to extract, segment into semantic chunks, and vector-index in ChromaDB.</p>
+            </div>
+
+            <div class="drop-zone" id="drop-zone">
+              <input type="file" id="file-input" multiple class="file-input-hidden" />
+              <div class="drop-zone-content">
+                <div class="upload-icon-circle">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </div>
+                <h3>Drag & Drop documents here</h3>
+                <p>or <button type="button" class="link-btn" id="browse-btn">browse your computer</button></p>
+                <div class="supported-formats-pills">
+                  <span>.pdf</span><span>.docx</span><span>.pptx</span><span>.xlsx</span><span>.csv</span><span>.txt</span><span>.md</span><span>.json</span><span>.py</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload Progress indicator -->
+            <div class="upload-progress-box" id="upload-progress" style="display: none;">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+              </div>
+              <p class="progress-text" id="progress-text">Processing and embedding documents...</p>
+            </div>
+          </div>
+
+          <!-- Document Library Card -->
+          <div class="glass-card library-card">
+            <div class="card-header flex-between">
+              <div>
+                <h2>Active Knowledge Base</h2>
+                <p>Documents currently indexed and queryable in your vector store.</p>
+              </div>
+              <button id="btn-refresh-docs" class="btn btn-icon" title="Refresh library">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              </button>
+            </div>
+
+            <div class="doc-list" id="document-list">
+              <div class="empty-docs-state" id="empty-docs-msg">
+                <div class="empty-icon">📁</div>
+                <p>No documents uploaded yet.</p>
+                <span>Upload a file above or click <strong>"Load Samples"</strong> to test immediately.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: ARCHITECTURE & WORKFLOW -->
+      <section class="tab-view" id="arch-view">
+        <div class="arch-container">
+          
+          <div class="arch-hero">
+            <h2>OmniRAG System Architecture & Workflow</h2>
+            <p>A comprehensive end-to-end breakdown of how multi-format documents are ingested, vectorized, retrieved, and synthesized into grounded answers.</p>
+          </div>
+
+          <!-- Architecture Flow Steps Grid -->
+          <div class="workflow-steps-grid">
+            
+            <!-- Step 1 -->
+            <div class="workflow-step-card">
+              <div class="step-badge">Phase 01</div>
+              <div class="step-icon">📥</div>
+              <h3>Universal Ingestion</h3>
+              <p>Accepts any file type through a unified ingestion interface.</p>
+              <ul class="step-details">
+                <li><strong>PDF:</strong> PyMuPDF (fitz) extracts text, font metadata, and page numbers</li>
+                <li><strong>Word (.docx):</strong> python-docx parses paragraphs & tables</li>
+                <li><strong>Slides (.pptx):</strong> python-pptx extracts slide shapes & notes</li>
+                <li><strong>Excel/CSV:</strong> pandas/openpyxl formats structured tabular data</li>
+                <li><strong>Code/Text:</strong> Universal multi-encoding auto-detect (UTF-8, Latin-1)</li>
+              </ul>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="workflow-step-card">
+              <div class="step-badge">Phase 02</div>
+              <div class="step-icon">✂️</div>
+              <h3>Semantic Chunking</h3>
+              <p>Transforms raw multi-page text into dense context chunks.</p>
+              <ul class="step-details">
+                <li><strong>Recursive Boundary Split:</strong> Paragraphs → Sentences → Words</li>
+                <li><strong>Chunk Window:</strong> ~800 characters with 150-char overlap</li>
+                <li><strong>Context Preservation:</strong> Overlap prevents fragmented sentences</li>
+                <li><strong>Metadata Attachment:</strong> <code>doc_id</code>, <code>filename</code>, <code>page_num</code>, <code>section_title</code></li>
+              </ul>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="workflow-step-card">
+              <div class="step-badge">Phase 03</div>
+              <div class="step-icon">⚡</div>
+              <h3>Vector Embedding & Storage</h3>
+              <p>Embeds chunks into high-dimensional semantic vector space.</p>
+              <ul class="step-details">
+                <li><strong>Embedding Model:</strong> <code>all-MiniLM-L6-v2</code> (Chroma ONNX Neural Engine, 384-dim) or <code>gemini-embedding-2</code></li>
+                <li><strong>Vector Database:</strong> ChromaDB persistent vector collection</li>
+                <li><strong>Indexing:</strong> Fast HNSW (Hierarchical Navigable Small World) index</li>
+                <li><strong>Zero-Cloud Local Mode:</strong> Runs entirely local offline without API dependency</li>
+              </ul>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="workflow-step-card">
+              <div class="step-badge">Phase 04</div>
+              <div class="step-icon">🔍</div>
+              <h3>Semantic Retrieval</h3>
+              <p>Retrieves the most semantically relevant chunks for any question.</p>
+              <ul class="step-details">
+                <li><strong>Question Vectorization:</strong> User prompt is projected into embedding space</li>
+                <li><strong>Cosine Similarity:</strong> K-Nearest Neighbors (KNN) calculates distance</li>
+                <li><strong>Top-K Selection:</strong> Filters top 4 most pertinent source chunks</li>
+                <li><strong>Filtering:</strong> Supports filtering by specific uploaded document</li>
+              </ul>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="workflow-step-card">
+              <div class="step-badge">Phase 05</div>
+              <div class="step-icon">🧠</div>
+              <h3>Grounded LLM Synthesis</h3>
+              <p>Produces an accurate, cited answer strictly backed by source evidence.</p>
+              <ul class="step-details">
+                <li><strong>LLM Engine:</strong> <code>gemini-2.5-flash</code> (Google GenAI)</li>
+                <li><strong>Grounded System Prompt:</strong> Strict anti-hallucination constraint</li>
+                <li><strong>Inline Citations:</strong> Automatically marks <code>[Source 1]</code>, <code>[Source 2]</code></li>
+                <li><strong>Interactive Inspector:</strong> Click any citation to inspect the raw passage</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Models Summary Table -->
+          <div class="glass-card models-card">
+            <h2>Detailed Models Specification</h2>
+            <div class="table-responsive">
+              <table class="specs-table">
+                <thead>
+                  <tr>
+                    <th>Component</th>
+                    <th>Model / Technology</th>
+                    <th>Role & Purpose</th>
+                    <th>Characteristics</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Generation LLM</strong></td>
+                    <td><code>gemini-2.5-flash</code></td>
+                    <td>Answers questions based on retrieved document chunks</td>
+                    <td>1M context window, fast latency, strong grounded reasoning</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Local Embedding</strong></td>
+                    <td><code>all-MiniLM-L6-v2</code> (ONNX)</td>
+                    <td>Local vectorization & Chroma semantic similarity</td>
+                    <td>384 dimensions, runs 100% locally with zero latency</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Cloud Embedding</strong></td>
+                    <td><code>gemini-embedding-2</code></td>
+                    <td>High-dimensional multi-modal embeddings (Optional)</td>
+                    <td>Unified multi-modal semantic space</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Vector Store</strong></td>
+                    <td><code>ChromaDB (HNSW)</code></td>
+                    <td>Stores & indexes document chunk vectors persistently</td>
+                    <td>Sub-millisecond approximate nearest neighbor search</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Document Parsers</strong></td>
+                    <td><code>PyMuPDF, python-docx, python-pptx, pandas</code></td>
+                    <td>Extracts text & structure from multi-format files</td>
+                    <td>Handles PDF, Word, PowerPoint, Excel, CSV, Code, Text</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: Settings Dialog -->
+  <div class="modal-overlay" id="settings-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Configuration & API Key</h3>
+        <button class="btn-close-modal" id="btn-close-settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="gemini-key-input">Google Gemini API Key:</label>
+          <div class="input-with-action">
+            <input type="password" id="gemini-key-input" placeholder="AIzaSy..." />
+            <button type="button" id="toggle-key-visibility" class="btn-subtle">Show</button>
+          </div>
+          <span class="field-hint">Key is kept locally on your server. Get one free at <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="model-select">Generation Model:</label>
+          <select id="model-select" class="custom-select">
+            <option value="gemini-2.5-flash">gemini-2.5-flash (Fast & Accurate - Recommended)</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Reasoning & Analysis)</option>
+            <option value="gemini-3.7-flash">gemini-3.7-flash (Next-Gen Agentic Model)</option>
+          </select>
+        </div>
+
+        <div class="key-status-indicator" id="key-status-box">
+          <span class="status-dot"></span>
+          <span id="key-status-text">Checking status...</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-settings">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-settings">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Source Chunk Inspector -->
+  <div class="modal-overlay" id="citation-modal" style="display: none;">
+    <div class="modal-card citation-card">
+      <div class="modal-header">
+        <div>
+          <span class="pill-highlight" id="modal-source-pill">Source 1</span>
+          <h3 id="modal-source-doc">Document.pdf</h3>
+        </div>
+        <button class="btn-close-modal" id="btn-close-citation">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="meta-row">
+          <span><strong>Page / Section:</strong> <span id="modal-source-page">Page 1</span></span>
+          <span><strong>Match Score:</strong> <span id="modal-source-score" class="score-badge">94%</span></span>
+        </div>
+        <div class="chunk-text-box" id="modal-source-text">
+          Text passage...
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btn-dismiss-citation">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
