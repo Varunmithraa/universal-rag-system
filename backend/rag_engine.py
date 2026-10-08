@@ -198,7 +198,7 @@ class RAGEngine:
 
         client = genai.Client(
             api_key=settings.gemini_api_key,
-            http_options=types.HttpOptions(timeout=12000)
+            http_options=types.HttpOptions(timeout=60000)
         )
 
         system_instruction = (
