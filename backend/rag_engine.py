@@ -194,8 +194,12 @@ class RAGEngine:
     ) -> tuple[str, str]:
         import time
         from google import genai
+        from google.genai import types
 
-        client = genai.Client(api_key=settings.gemini_api_key)
+        client = genai.Client(
+            api_key=settings.gemini_api_key,
+            http_options=types.HttpOptions(timeout=12000)
+        )
 
         system_instruction = (
             "You are an expert, highly accurate RAG (Retrieval-Augmented Generation) document assistant.\n"
@@ -205,7 +209,8 @@ class RAGEngine:
             "2. Inline Citations: Reference the exact source where you found the information using `[Source X]` (e.g. `[Source 1]`, `[Source 2]`).\n"
             "3. Source Attribution: If different sources give conflicting or complementary details, explicitly mention them.\n"
             "4. Unanswered Information: If the context does not contain enough information to answer the question, state honestly that the uploaded document does not mention it, rather than hallucinating.\n"
-            "5. Formatting: Use clean markdown with bullet points, bold key terms, and code blocks if applicable."
+            "5. Formatting: Use clean markdown with bullet points, bold key terms, and code blocks if applicable.\n"
+            "6. Math & Formulas: Format all mathematical formulas and scientific equations in standard LaTeX: use `$$...$$` on its own line for display equations (e.g. `$$p_T = \\sqrt{p_x^2 + p_y^2}$$`) and inline `$..$` for variables (e.g. `$p_T$`, `$p_x$`)."
         )
 
         prompt = (
@@ -215,13 +220,12 @@ class RAGEngine:
         )
 
         configured_model = settings.llm_model.strip()
-        # Upgrade deprecated models
-        if "2.5-flash" in configured_model or "2.5-pro" in configured_model:
-            configured_model = "gemini-3.7-flash"
-            settings.llm_model = "gemini-3.7-flash"
+        if any(x in configured_model for x in ["2.5-flash", "2.5-pro", "3.7-flash"]):
+            configured_model = "gemini-3.5-flash-lite"
+            settings.llm_model = "gemini-3.5-flash-lite"
 
-        # Candidate fallback models in priority order (no deprecated models)
-        candidates = [configured_model, "gemini-3.7-flash", "gemini-3.8-flash"]
+        # Candidate fallback models in priority order: ultra-fast flash-lite first, then flash
+        candidates = [configured_model, "gemini-3.5-flash-lite", "gemini-3.8-flash"]
         unique_models = []
         for m in candidates:
             if m not in unique_models:
@@ -230,31 +234,41 @@ class RAGEngine:
         last_error = ""
         for model_name in unique_models:
             try:
+                # Standard clean config with system instructions and deterministic temperature
+                gen_config = types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.2
+                )
                 response = client.models.generate_content(
                     model=model_name,
                     contents=prompt,
-                    config={
-                        "system_instruction": system_instruction,
-                        "temperature": 0.2
-                    }
+                    config=gen_config
                 )
-                if response.text:
+                if response and response.text:
                     if model_name != settings.llm_model:
                         settings.llm_model = model_name
                     return response.text, model_name
             except Exception as e:
                 err_str = str(e)
                 last_error = err_str
-                # Check for 404/not available or 503/high demand
-                is_transient_or_missing = any(k in err_str.lower() for k in ["not_found", "404", "no longer available", "503", "unavailable", "high demand", "rate limit", "429"])
-                if is_transient_or_missing:
-                    time.sleep(0.5)
+                # Check for 404/not available, 503 high demand, 429 rate limit or timeout
+                is_retryable = any(k in err_str.lower() for k in [
+                    "not_found", "404", "no longer available", "503", "unavailable",
+                    "high demand", "rate limit", "429", "timeout", "timed out", "deadline"
+                ])
+                if is_retryable:
+                    time.sleep(0.3)
                     continue
                 else:
                     break
 
-        error_msg = f"Error contacting Gemini API: {last_error}\n\nPlease verify your Gemini API key in Settings."
-        return error_msg, settings.llm_model
+        # Fallback to local neural extractor if Gemini API failed or is temporarily overloaded
+        fallback_msg = self._generate_local_answer(question, sources)
+        return (
+            f"> ⚠️ *Gemini Cloud API Notice*: Temporary service spike on `{configured_model}` ({last_error[:120]}...). "
+            f"Extracted direct evidence below:\n\n{fallback_msg}",
+            "Local Evidence Extractor (Cloud Fallback)"
+        )
 
     def _generate_local_answer(
         self, question: str, sources: List[Dict[str, Any]]

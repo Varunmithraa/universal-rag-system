@@ -455,7 +455,37 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    // Attach click listeners to inline source badges [Source X]
+    bubble.querySelectorAll('.source-inline-badge').forEach(badge => {
+      badge.addEventListener('click', (e) => {
+        e.preventDefault();
+        const sourceId = parseInt(badge.getAttribute('data-source-id'), 10);
+        const matched = (sources || []).find(s => s.source_id === sourceId);
+        if (matched) {
+          showCitationModal(matched);
+        }
+      });
+    });
+
     chatMessages.appendChild(bubble);
+
+    // Run KaTeX auto-render on the message content if any delimiters remain
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(bubble.querySelector('.msg-body'), {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false }
+          ],
+          throwOnError: false
+        });
+      } catch (err) {
+        console.warn('Math auto-render warning:', err);
+      }
+    }
+
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
@@ -603,13 +633,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function parseMarkdown(md) {
     if (!md) return '';
-    let html = escapeHtml(md);
 
-    // Code blocks ```code```
-    html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+    const mathBlocks = [];
+    const codeBlocks = [];
 
-    // Inline code `code`
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // 1. Protect fenced code blocks ```code```
+    let text = md.replace(/```([\s\S]*?)```/g, (m, code) => {
+      const id = codeBlocks.length;
+      codeBlocks.push('<pre><code>' + escapeHtml(code) + '</code></pre>');
+      return '@@@CODE_BLOCK_' + id + '@@@';
+    });
+
+    // 2. Protect inline code `code`
+    text = text.replace(/`([^`]+)`/g, (m, code) => {
+      const id = codeBlocks.length;
+      codeBlocks.push('<code>' + escapeHtml(code) + '</code>');
+      return '@@@CODE_BLOCK_' + id + '@@@';
+    });
+
+    // 3. Render and protect display equations $$...$$ and \[...\]
+    text = text.replace(/\$\$([\s\S]+?)\$\$/g, (m, formula) => {
+      const id = mathBlocks.length;
+      let rendered = '';
+      if (window.katex) {
+        try {
+          rendered = '<div class="math-display">' + window.katex.renderToString(formula.trim(), { displayMode: true, throwOnError: false }) + '</div>';
+        } catch (e) {
+          rendered = '<div class="math-display">$$' + escapeHtml(formula.trim()) + '$$</div>';
+        }
+      } else {
+        rendered = '<div class="math-display">$$' + escapeHtml(formula.trim()) + '$$</div>';
+      }
+      mathBlocks.push(rendered);
+      return '\n\n@@@MATH_BLOCK_' + id + '@@@\n\n';
+    });
+
+    text = text.replace(/\\\[([\s\S]+?)\\\]/g, (m, formula) => {
+      const id = mathBlocks.length;
+      let rendered = '';
+      if (window.katex) {
+        try {
+          rendered = '<div class="math-display">' + window.katex.renderToString(formula.trim(), { displayMode: true, throwOnError: false }) + '</div>';
+        } catch (e) {
+          rendered = '<div class="math-display">$$' + escapeHtml(formula.trim()) + '$$</div>';
+        }
+      } else {
+        rendered = '<div class="math-display">$$' + escapeHtml(formula.trim()) + '$$</div>';
+      }
+      mathBlocks.push(rendered);
+      return '\n\n@@@MATH_BLOCK_' + id + '@@@\n\n';
+    });
+
+    // 4. Render and protect inline equations $...$ and \(...\)
+    text = text.replace(/(^|[^\$])\$([^\$\n]+?)\$(?!\$)/g, (m, prefix, formula) => {
+      const id = mathBlocks.length;
+      let rendered = '';
+      if (window.katex) {
+        try {
+          rendered = '<span class="math-inline">' + window.katex.renderToString(formula.trim(), { displayMode: false, throwOnError: false }) + '</span>';
+        } catch (e) {
+          rendered = '<span class="math-inline">$' + escapeHtml(formula.trim()) + '$</span>';
+        }
+      } else {
+        rendered = '<span class="math-inline">$' + escapeHtml(formula.trim()) + '$</span>';
+      }
+      mathBlocks.push(rendered);
+      return prefix + '@@@MATH_BLOCK_' + id + '@@@';
+    });
+
+    text = text.replace(/\\\(([\s\S]+?)\\\)/g, (m, formula) => {
+      const id = mathBlocks.length;
+      let rendered = '';
+      if (window.katex) {
+        try {
+          rendered = '<span class="math-inline">' + window.katex.renderToString(formula.trim(), { displayMode: false, throwOnError: false }) + '</span>';
+        } catch (e) {
+          rendered = '<span class="math-inline">$' + escapeHtml(formula.trim()) + '$</span>';
+        }
+      } else {
+        rendered = '<span class="math-inline">$' + escapeHtml(formula.trim()) + '$</span>';
+      }
+      mathBlocks.push(rendered);
+      return '@@@MATH_BLOCK_' + id + '@@@';
+    });
+
+    // 5. Escape HTML in remainder text
+    let html = escapeHtml(text);
+
+    // Citations [Source X] into interactive badges
+    html = html.replace(/\[Source\s*(\d+)\]/gi, '<button class="source-inline-badge" data-source-id="$1">📄 [Source $1]</button>');
 
     // Bold **text**
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -625,19 +737,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Unordered lists - item
     html = html.replace(/^\s*-\s+(.*$)/gim, '<li>$1</li>');
     html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
-
-    // Clean up duplicate uls
     html = html.replace(/<\/ul>\s*<ul>/g, '');
 
     // Paragraphs
     const paras = html.split(/\n\n+/);
-    return paras.map(p => {
+    html = paras.map(p => {
       p = p.trim();
-      if (p.startsWith('<h') || p.startsWith('<ul>') || p.startsWith('<pre>') || p.startsWith('<blockquote>')) {
+      if (!p) return '';
+      if (p.startsWith('<h') || p.startsWith('<ul>') || p.startsWith('<pre>') || p.startsWith('<blockquote>') || p.startsWith('@@@MATH_BLOCK_')) {
         return p;
       }
       return `<p>${p.replace(/\n/g, '<br/>')}</p>`;
-    }).join('');
+    }).filter(Boolean).join('');
+
+    // 6. Restore code blocks & math blocks
+    codeBlocks.forEach((code, i) => {
+      html = html.split('@@@CODE_BLOCK_' + i + '@@@').join(code);
+    });
+    mathBlocks.forEach((math, i) => {
+      html = html.split('@@@MATH_BLOCK_' + i + '@@@').join(math);
+    });
+
+    return html;
   }
 
   function showToast(message, type = 'info') {

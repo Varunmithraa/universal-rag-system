@@ -1278,3 +1278,90 @@ body {
 .toast.toast-error {
   border-left-color: var(--accent-danger);
 }
+
+/* ==========================================
+   MATHEMATICAL & SCIENTIFIC FORMULA RENDERING (KaTeX)
+   ========================================== */
+.math-display-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.1rem 0;
+  width: 100%;
+}
+
+.math-display,
+.katex-display {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0.85rem 0 !important;
+  padding: 0.95rem 1.4rem !important;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-left: 3px solid #818cf8;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  max-width: 100%;
+}
+
+.math-display .katex,
+.katex-display .katex {
+  font-size: 1.32rem !important;
+  color: #f8fafc;
+  line-height: 1.4;
+}
+
+.math-inline,
+.katex {
+  font-size: 1.05em;
+  color: #e2e8f0;
+  padding: 0 2px;
+}
+
+.katex .mord.mathnormal {
+  font-style: italic;
+}
+
+/* Scrollbar for wide equations */
+.math-display::-webkit-scrollbar,
+.katex-display::-webkit-scrollbar {
+  height: 4px;
+}
+
+.math-display::-webkit-scrollbar-thumb,
+.katex-display::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4);
+  border-radius: 4px;
+}
+
+/* Inline Citation Badges */
+.source-inline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1px 7px;
+  margin: 0 3px;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(99, 102, 241, 0.38);
+  color: #a5b4fc;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  vertical-align: middle;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.source-inline-badge:hover {
+  background: rgba(99, 102, 241, 0.38);
+  border-color: #818cf8;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
