@@ -15,7 +15,7 @@ if __name__ == "__main__":
     sys.path.insert(0, str(current_dir))
 
     print("=" * 65)
-    print("      🚀 Starting OmniRAG: Universal Document Intelligence")
+    print("      Starting OmniRAG: Universal Document Intelligence")
     print("=" * 65)
     print(f"Project Location : {current_dir}")
     print("Server URL       : http://127.0.0.1:8000")
@@ -23,4 +23,4 @@ if __name__ == "__main__":
     print("=" * 65)
 
     threading.Thread(target=open_browser, daemon=True).start()
-    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True, reload_dirs=[str(current_dir / "backend")])

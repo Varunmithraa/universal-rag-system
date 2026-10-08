@@ -44,7 +44,7 @@
         </div>
         <div class="metric-chip model-chip" id="metric-model">
           <span class="label">LLM:</span>
-          <span class="value" id="stat-model-name">gemini-2.5-flash</span>
+          <span class="value" id="stat-model-name">gemini-3.7-flash</span>
         </div>
       </div>
 
@@ -281,7 +281,7 @@
               <h3>Grounded LLM Synthesis</h3>
               <p>Produces an accurate, cited answer strictly backed by source evidence.</p>
               <ul class="step-details">
-                <li><strong>LLM Engine:</strong> <code>gemini-2.5-flash</code> (Google GenAI)</li>
+                <li><strong>LLM Engine:</strong> <code>gemini-3.8-flash</code> (Google GenAI)</li>
                 <li><strong>Grounded System Prompt:</strong> Strict anti-hallucination constraint</li>
                 <li><strong>Inline Citations:</strong> Automatically marks <code>[Source 1]</code>, <code>[Source 2]</code></li>
                 <li><strong>Interactive Inspector:</strong> Click any citation to inspect the raw passage</li>
@@ -305,7 +305,7 @@
                 <tbody>
                   <tr>
                     <td><strong>Generation LLM</strong></td>
-                    <td><code>gemini-2.5-flash</code></td>
+                    <td><code>gemini-3.8-flash</code></td>
                     <td>Answers questions based on retrieved document chunks</td>
                     <td>1M context window, fast latency, strong grounded reasoning</td>
                   </tr>
@@ -364,9 +364,9 @@
         <div class="form-group">
           <label for="model-select">Generation Model:</label>
           <select id="model-select" class="custom-select">
-            <option value="gemini-2.5-flash">gemini-2.5-flash (Fast & Accurate - Recommended)</option>
+            <option value="gemini-3.7-flash" selected>gemini-3.7-flash (Stable & Fast - Recommended)</option>
+            <option value="gemini-3.8-flash">gemini-3.8-flash (Latest Flash Model)</option>
             <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Reasoning & Analysis)</option>
-            <option value="gemini-3.7-flash">gemini-3.7-flash (Next-Gen Agentic Model)</option>
           </select>
         </div>
 

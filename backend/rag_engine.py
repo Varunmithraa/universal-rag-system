@@ -10,7 +10,7 @@ from backend.config import settings, CHROMA_DIR
 class RAGEngine:
     """
     Central RAG Engine orchestrating ChromaDB vector indexing, semantic search,
-    source citations, and answer synthesis via Google Gemini API (gemini-2.5-flash)
+    source citations, and answer synthesis via Google Gemini API (gemini-3.8-flash)
     or local extractive synthesis.
     """
 
@@ -178,8 +178,7 @@ class RAGEngine:
         # Generate answer using Gemini if API key is present
         api_key = settings.gemini_api_key.strip()
         if api_key:
-            answer = self._generate_gemini_answer(question, combined_context, retrieved_sources)
-            model_used = settings.llm_model
+            answer, model_used = self._generate_gemini_answer(question, combined_context, retrieved_sources)
         else:
             answer = self._generate_local_answer(question, retrieved_sources)
             model_used = "Local Neural Extractor (Add Gemini API Key for Generative Synthesis)"
@@ -192,41 +191,70 @@ class RAGEngine:
 
     def _generate_gemini_answer(
         self, question: str, context: str, sources: List[Dict[str, Any]]
-    ) -> str:
-        try:
-            from google import genai
-            client = genai.Client(api_key=settings.gemini_api_key)
+    ) -> tuple[str, str]:
+        import time
+        from google import genai
 
-            system_instruction = (
-                "You are an expert, highly accurate RAG (Retrieval-Augmented Generation) document assistant.\n"
-                "Your objective is to answer the user's question with utmost fidelity strictly based on the provided source excerpts.\n"
-                "Guidelines:\n"
-                "1. Direct & Factual: Answer concisely and clearly based on the context.\n"
-                "2. Inline Citations: Reference the exact source where you found the information using `[Source X]` (e.g. `[Source 1]`, `[Source 2]`).\n"
-                "3. Source Attribution: If different sources give conflicting or complementary details, explicitly mention them.\n"
-                "4. Unanswered Information: If the context does not contain enough information to answer the question, state honestly that the uploaded document does not mention it, rather than hallucinating.\n"
-                "5. Formatting: Use clean markdown with bullet points, bold key terms, and code blocks if applicable."
-            )
+        client = genai.Client(api_key=settings.gemini_api_key)
 
-            prompt = (
-                f"DOCUMENT CONTEXT EXCERPTS:\n{context}\n\n"
-                f"USER QUESTION: {question}\n\n"
-                "Provide a comprehensive, well-structured answer with [Source X] citations:"
-            )
+        system_instruction = (
+            "You are an expert, highly accurate RAG (Retrieval-Augmented Generation) document assistant.\n"
+            "Your objective is to answer the user's question with utmost fidelity strictly based on the provided source excerpts.\n"
+            "Guidelines:\n"
+            "1. Direct & Factual: Answer concisely and clearly based on the context.\n"
+            "2. Inline Citations: Reference the exact source where you found the information using `[Source X]` (e.g. `[Source 1]`, `[Source 2]`).\n"
+            "3. Source Attribution: If different sources give conflicting or complementary details, explicitly mention them.\n"
+            "4. Unanswered Information: If the context does not contain enough information to answer the question, state honestly that the uploaded document does not mention it, rather than hallucinating.\n"
+            "5. Formatting: Use clean markdown with bullet points, bold key terms, and code blocks if applicable."
+        )
 
-            response = client.models.generate_content(
-                model=settings.llm_model,
-                contents=prompt,
-                config={
-                    "system_instruction": system_instruction,
-                    "temperature": 0.2
-                }
-            )
-            if response.text:
-                return response.text
-            return "Unable to generate an answer from the model. Please check the prompt or document."
-        except Exception as e:
-            return f"Error contacting Gemini API: {str(e)}\n\nPlease verify your Gemini API key in Settings."
+        prompt = (
+            f"DOCUMENT CONTEXT EXCERPTS:\n{context}\n\n"
+            f"USER QUESTION: {question}\n\n"
+            "Provide a comprehensive, well-structured answer with [Source X] citations:"
+        )
+
+        configured_model = settings.llm_model.strip()
+        # Upgrade deprecated models
+        if "2.5-flash" in configured_model or "2.5-pro" in configured_model:
+            configured_model = "gemini-3.7-flash"
+            settings.llm_model = "gemini-3.7-flash"
+
+        # Candidate fallback models in priority order (no deprecated models)
+        candidates = [configured_model, "gemini-3.7-flash", "gemini-3.8-flash"]
+        unique_models = []
+        for m in candidates:
+            if m not in unique_models:
+                unique_models.append(m)
+
+        last_error = ""
+        for model_name in unique_models:
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config={
+                        "system_instruction": system_instruction,
+                        "temperature": 0.2
+                    }
+                )
+                if response.text:
+                    if model_name != settings.llm_model:
+                        settings.llm_model = model_name
+                    return response.text, model_name
+            except Exception as e:
+                err_str = str(e)
+                last_error = err_str
+                # Check for 404/not available or 503/high demand
+                is_transient_or_missing = any(k in err_str.lower() for k in ["not_found", "404", "no longer available", "503", "unavailable", "high demand", "rate limit", "429"])
+                if is_transient_or_missing:
+                    time.sleep(0.5)
+                    continue
+                else:
+                    break
+
+        error_msg = f"Error contacting Gemini API: {last_error}\n\nPlease verify your Gemini API key in Settings."
+        return error_msg, settings.llm_model
 
     def _generate_local_answer(
         self, question: str, sources: List[Dict[str, Any]]
@@ -252,7 +280,7 @@ class RAGEngine:
             "---\n"
             "✨ **To enable full AI generative synthesis, cross-page analysis & answers:**\n"
             "Click the purple **Settings** button in the top right and enter your **Google Gemini API Key** (free at [ai.google.dev](https://aistudio.google.com/apikey)). "
-            "Once saved, `gemini-2.5-flash` will automatically analyze these excerpts and write a complete, natural-language synthesized answer!"
+            "Once saved, `gemini-3.8-flash` will automatically analyze these excerpts and write a complete, natural-language synthesized answer!"
         )
         return msg
 

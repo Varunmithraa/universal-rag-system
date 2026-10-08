@@ -136,10 +136,15 @@ def get_settings():
 
 @app.post("/api/settings")
 def update_settings(req: SettingsRequest):
-    if req.gemini_api_key is not None:
+    if req.gemini_api_key is not None and req.gemini_api_key.strip():
         settings.gemini_api_key = req.gemini_api_key.strip()
     if req.llm_model:
-        settings.llm_model = req.llm_model.strip()
+        model = req.llm_model.strip()
+        if "2.5-flash" in model or "2.5-pro" in model:
+            model = "gemini-3.7-flash"
+        settings.llm_model = model
+    if hasattr(settings, "save"):
+        settings.save()
     return {"message": "Settings updated successfully", "has_key": bool(settings.gemini_api_key), "model": settings.llm_model}
 
 @app.post("/api/load-samples")

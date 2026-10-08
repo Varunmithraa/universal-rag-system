@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
       statDocsCount.textContent = data.total_documents || 0;
       statChunksCount.textContent = data.total_chunks || 0;
       docsTabCount.textContent = data.total_documents || 0;
-      statModelName.textContent = data.llm_model || 'gemini-2.5-flash';
+      statModelName.textContent = data.llm_model || 'gemini-3.7-flash';
     } catch (e) {
       console.warn('Failed to load stats:', e);
     }
@@ -510,14 +510,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const apiKey = geminiKeyInput.value.trim();
       const model = modelSelect.value;
 
+      const payload = { llm_model: model };
+      if (apiKey) {
+        payload.gemini_api_key = apiKey;
+      }
+
       try {
         const res = await fetch('/api/settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            gemini_api_key: apiKey,
-            llm_model: model
-          })
+          body: JSON.stringify(payload)
         });
         if (res.ok) {
           showToast('Settings saved successfully', 'success');
@@ -541,16 +543,18 @@ document.addEventListener('DOMContentLoaded', () => {
       state.settings = data;
 
       if (data.llm_model) {
-        modelSelect.value = data.llm_model;
+        modelSelect.value = data.llm_model === 'gemini-2.5-flash' ? 'gemini-3.8-flash' : data.llm_model;
       }
 
       const dot = keyStatusBox.querySelector('.status-dot');
       if (data.has_gemini_key) {
         dot.classList.add('active');
         keyStatusText.textContent = `Gemini Key Active (${data.masked_key})`;
+        geminiKeyInput.placeholder = `Current key active (${data.masked_key}) - enter new to change`;
       } else {
         dot.classList.remove('active');
         keyStatusText.textContent = 'No Gemini API key set (Running in Local Mode)';
+        geminiKeyInput.placeholder = 'AIzaSy...';
       }
     } catch (e) {
       console.warn('Failed to fetch settings:', e);

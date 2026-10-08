@@ -44,7 +44,7 @@ OmniRAG follows a modular 5-tier architecture:
                                      v
 +--------------------------------------------------------------------------+
 |                  4. Grounded Generation & Citation Engine                |
-|  - Model: Google Gemini (gemini-2.5-flash / gemini-2.5-pro)              |
+|  - Model: Google Gemini (gemini-3.8-flash / gemini-3.7-flash)             |
 |  - Strict anti-hallucination grounded system instruction                 |
 |  - Precise inline citations: [Source X: Document, Page Y]                |
 |  - Interactive Inspector: Click citations to inspect raw passage evidence|
@@ -66,7 +66,7 @@ OmniRAG follows a modular 5-tier architecture:
    - When a user asks a question, the query is vectorized and compared against the document database using cosine similarity.
    - The top 4 most pertinent context chunks are gathered with similarity scores.
 5. **Synthesis & Citation**:
-   - The retrieved excerpts and user question are passed into `gemini-2.5-flash`.
+   - The retrieved excerpts and user question are passed into `gemini-3.8-flash`.
    - The model generates an authoritative answer citing `[Source 1]`, `[Source 2]`, etc.
    - Users can click any citation pill to view the exact text fragment and score.
 
@@ -76,7 +76,7 @@ OmniRAG follows a modular 5-tier architecture:
 
 | Component | Model / Library | Specification |
 | :--- | :--- | :--- |
-| **Generation LLM** | `gemini-2.5-flash` | Ultra-fast multimodal model, 1M context window, high grounding fidelity. Configurable to `gemini-2.5-pro` or `gemini-3.7-flash`. |
+| **Generation LLM** | `gemini-3.8-flash` | Fast multimodal model, 1M context window, high grounding fidelity. Configurable to `gemini-3.7-flash` or `gemini-2.5-pro`. |
 | **Local Vector Embeddings** | `all-MiniLM-L6-v2` | 384-dimensional dense sentence embeddings via Chroma ONNX. Runs locally with zero API key requirement. |
 | **Cloud Vector Embeddings** | `gemini-embedding-2` | Google GenAI embedding model for unified multimodal semantics. |
 | **Vector Database** | `ChromaDB` | Fast, persistent, embedded vector database utilizing HNSW indexing. |
